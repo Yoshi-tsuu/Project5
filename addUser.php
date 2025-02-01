@@ -6,18 +6,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $lastName = $_POST['lastName'];
     $email = $_POST['email'];
     $phoneNumber = $_POST['phoneNumber'];
-    $specializationID = $_POST['specializationID'];
-    $bio = $_POST['bio'];
+    $dateOfBirth = $_POST['dateOfBirth'];
+    $address = $_POST['address'];
 
-    $sql = "INSERT INTO Doctors (FirstName, LastName, Email, PhoneNumber, SpecializationID, Bio) VALUES ('$firstName', '$lastName', '$email', '$phoneNumber', '$specializationID', '$bio')";
+    $sql = "INSERT INTO Users (FirstName, LastName, Email, PhoneNumber, DateOfBirth, Address) VALUES ('$firstName', '$lastName', '$email', '$phoneNumber', '$dateOfBirth', '$address')";
     if ($conn->query($sql) === TRUE) {
-        echo "New doctor added successfully";
+        echo "New user added successfully";
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;
     }
 }
 
 $conn->close();
-header("Location: doctors.php");
+header("Location: users.php");
 
 ?>
