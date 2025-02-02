@@ -21,15 +21,30 @@
   </form>
   <?php
     $conn = new mysqli("localhost", "root", "", "MedicalAppointments");
-    $sql = "SELECT * FROM Users";
-    echo "<table><tr><th>ID</th><th>First Name</th><th>Last Name</th><th>Email</th><th>Phone Number</th><th>Date of Birth</th><th>Address</th><th>Controls</th></tr>";
+    
+    $sql = "SELECT u.UserID, u.FirstName, u.LastName, u.Email, u.PhoneNumber, u.DateOfBirth, u.Address, 
+                   COALESCE(SUM(p.Amount), 0) AS TotalAmountPaid
+            FROM Users u
+            LEFT JOIN Payments p ON u.UserID = p.UserID
+            GROUP BY u.UserID";
+    
+    echo "<table><tr><th>ID</th><th>First Name</th><th>Last Name</th><th>Email</th><th>Phone Number</th><th>Date of Birth</th><th>Address</th><th>Total Amount Paid</th><th>Controls</th></tr>";
     $result = $conn->query($sql);
     while($row = $result->fetch_assoc()){
-      echo "<tr><td>{$row['UserID']}</td><td>{$row['FirstName']}</td><td>{$row['LastName']}</td><td>{$row['Email']}</td><td>{$row['PhoneNumber']}</td><td>{$row['DateOfBirth']}</td><td>{$row['Address']}</td>
-      <td>
-        <input type='button' value='Delete' class='usun' data='{$row['UserID']}'>
-        <input type='button' value='Update' class='update' data='{$row['UserID']}'>
-      </td>";
+      echo "<tr>
+              <td>{$row['UserID']}</td>
+              <td>{$row['FirstName']}</td>
+              <td>{$row['LastName']}</td>
+              <td>{$row['Email']}</td>
+              <td>{$row['PhoneNumber']}</td>
+              <td>{$row['DateOfBirth']}</td>
+              <td>{$row['Address']}</td>
+              <td>{$row['TotalAmountPaid']}</td>
+              <td>
+                <input type='button' value='Delete' class='usun' data='{$row['UserID']}'>
+                <input type='button' value='Update' class='update' data='{$row['UserID']}'>
+              </td>
+            </tr>";
     }
     echo "</table>";
   ?>
