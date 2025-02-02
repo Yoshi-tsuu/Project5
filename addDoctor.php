@@ -19,5 +19,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 $conn->close();
 header("Location: doctors.php");
-
 ?>
