@@ -11,16 +11,57 @@
 <body>
   <a href="Index.html">Powrót do strony głównej</a>
   <form method="POST" action='addPrescription.php' id='dane'>
-    <input type='text' id='appointmentID' name='appointmentID' placeholder="Appointment ID">
-    <input type='text' id='doctorID' name='doctorID' placeholder="Doctor ID">
-    <input type='text' id='userID' name='userID' placeholder="User ID">
+    <select name='appointmentID' id='appointmentID'>
+      <option value=""></option>
+      <?php
+      $conn = new mysqli("localhost", "root", "", "MedicalAppointments");
+      $sql = "SELECT AppointmentID, AppointmentDate FROM Appointments";
+      $result = $conn->query($sql);
+      while($row = $result->fetch_row()){
+        echo "<option value='$row[0]'>$row[1]</option>";
+      }
+      ?>
+    </select>
+    <select name='doctorID' id='doctorID'>
+      <option value=""></option>
+      <?php
+      $sql = "SELECT DoctorID, FirstName, LastName FROM Doctors";
+      $result = $conn->query($sql);
+      while($row = $result->fetch_row()){
+        echo "<option value='$row[0]'>$row[1] $row[2]</option>";
+      }
+      ?>
+    </select>
+    <select name='userID' id='userID'>
+      <option value=""></option>
+      <?php
+      $sql = "SELECT UserID, FirstName, LastName FROM Users";
+      $result = $conn->query($sql);
+      while($row = $result->fetch_row()){
+        echo "<option value='$row[0]'>$row[1] $row[2]</option>";
+      }
+      ?>
+    </select>
     <input type='text' id='details' name='details' placeholder="Details">
     <input type='submit' name='dodaj' value='Add Prescription'>
   </form>
   <?php
-    $conn = new mysqli("localhost", "root", "", "MedicalAppointments");
-    $sql = "SELECT * FROM Prescriptions";
-    echo "<table><tr><th>ID</th><th>Appointment ID</th><th>Doctor ID</th><th>User ID</th><th>Details</th><th>Created At</th><th>Controls</th></tr>";
+    $sql = "SELECT 
+    pr.PrescriptionID,
+    CONCAT(u.FirstName, ' ', u.LastName) AS UserName,  
+    CONCAT(d.FirstName, ' ', d.LastName) AS DoctorName,  
+    a.AppointmentDate,  
+    pr.Details,
+    pr.CreatedAt  
+FROM 
+    Prescriptions pr
+JOIN 
+    Users u ON pr.UserID = u.UserID  
+JOIN 
+    Doctors d ON pr.DoctorID = d.DoctorID
+JOIN 
+    Appointments a ON pr.AppointmentID = a.AppointmentID; ";
+    echo "<table><tr><th>ID</th><th>User ID</th><th>Doctor ID</th><th>Appointment ID</th><th>Details</th><th>Created At</th><th>Controls</th></tr>";
     $result = $conn->query($sql);
     while($row = $result->fetch_row()){
       echo "<tr><td>$row[0]</td><td>$row[1]</td><td>$row[2]</td><td>$row[3]</td><td>$row[4]</td><td>$row[5]</td>

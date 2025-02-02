@@ -11,15 +11,45 @@
 <body>
   <a href="Index.html">Powrót do strony głównej</a>
   <form method="POST" action='addReview.php' id='dane'>
-    <input type='text' id='userID' name='userID' placeholder="User ID">
-    <input type='text' id='doctorID' name='doctorID' placeholder="Doctor ID">
+    <select name='userID' id='userID'>
+      <option value=""></option>
+      <?php
+      $conn = new mysqli("localhost", "root", "", "MedicalAppointments");
+      $sql = "SELECT UserID, FirstName, LastName FROM Users";
+      $result = $conn->query($sql);
+      while($row = $result->fetch_row()){
+        echo "<option value='$row[0]'>$row[1] $row[2]</option>";
+      }
+      ?>
+    </select>
+    <select name='doctorID' id='doctorID'>
+      <option value=""></option>
+      <?php
+      $sql = "SELECT DoctorID, FirstName, LastName FROM Doctors";
+      $result = $conn->query($sql);
+      while($row = $result->fetch_row()){
+        echo "<option value='$row[0]'>$row[1] $row[2]</option>";
+      }
+      ?>
+    </select>
     <input type='text' id='rating' name='rating' placeholder="Rating">
     <input type='text' id='comment' name='comment' placeholder="Comment">
     <input type='submit' name='dodaj' value='Add Review'>
   </form>
   <?php
-    $conn = new mysqli("localhost", "root", "", "MedicalAppointments");
-    $sql = "SELECT * FROM Reviews";
+    $sql = "SELECT 
+    r.ReviewID,
+    CONCAT(u.FirstName, ' ', u.LastName) AS UserName,
+    CONCAT(d.FirstName, ' ', d.LastName) AS DoctorName,
+    r.Rating,
+    r.Comment,
+    r.CreatedAt
+FROM 
+    Reviews r
+JOIN 
+    Users u ON r.UserID = u.UserID
+JOIN 
+    Doctors d ON r.DoctorID = d.DoctorID;";
     echo "<table><tr><th>ID</th><th>User ID</th><th>Doctor ID</th><th>Rating</th><th>Comment</th><th>Created At</th><th>Controls</th></tr>";
     $result = $conn->query($sql);
     while($row = $result->fetch_row()){

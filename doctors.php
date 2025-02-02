@@ -40,6 +40,7 @@
       <td>
         <input type='button' value='Delete' class='usun' data='$row[0]'>
         <input type='button' value='Update' class='update' data='$row[0]'>
+        <a href='doctor_reviews.php?doctorID=$row[0]'><input type='button' value='See Reviews'></a>
       </td>";
     }
     echo "</table>";

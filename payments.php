@@ -11,8 +11,27 @@
 <body>
   <a href="Index.html">Powrót do strony głównej</a>
   <form method="POST" action='addPayment.php' id='dane'>
-    <input type='text' id='userID' name='userID' placeholder="User ID">
-    <input type='text' id='appointmentID' name='appointmentID' placeholder="Appointment ID">
+    <select name='userID' id='userID'>
+      <option value=""></option>
+      <?php
+      $conn = new mysqli("localhost", "root", "", "MedicalAppointments");
+      $sql = "SELECT UserID, FirstName, LastName FROM Users";
+      $result = $conn->query($sql);
+      while($row = $result->fetch_row()){
+        echo "<option value='$row[0]'>$row[1] $row[2]</option>";
+      }
+      ?>
+    </select>
+    <select name='appointmentID' id='appointmentID'>
+      <option value=""></option>
+      <?php
+      $sql = "SELECT AppointmentID, AppointmentDate FROM Appointments";
+      $result = $conn->query($sql);
+      while($row = $result->fetch_row()){
+        echo "<option value='$row[0]'>$row[1]</option>";
+      }
+      ?>
+    </select>
     <input type='text' id='amount' name='amount' placeholder="Amount">
     <select name='paymentMethod' id='paymentMethod'>
       <option value="CreditCard">Credit Card</option>
@@ -28,8 +47,20 @@
     <input type='submit' name='dodaj' value='Add Payment'>
   </form>
   <?php
-    $conn = new mysqli("localhost", "root", "", "MedicalAppointments");
-    $sql = "SELECT * FROM Payments";
+    $sql = "SELECT 
+    p.PaymentID,
+    CONCAT(u.FirstName, ' ', u.LastName) AS UserName,
+    a.AppointmentDate,  
+    p.Amount,
+    p.PaymentDate,
+    p.PaymentMethod,
+    p.Status
+FROM 
+    Payments p
+JOIN 
+    Users u ON p.UserID = u.UserID
+LEFT JOIN 
+    Appointments a ON p.AppointmentID = a.AppointmentID;";
     echo "<table><tr><th>ID</th><th>User ID</th><th>Appointment ID</th><th>Amount</th><th>Payment Method</th><th>Status</th><th>Payment Date</th><th>Controls</th></tr>";
     $result = $conn->query($sql);
     while($row = $result->fetch_row()){
