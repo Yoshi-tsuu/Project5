@@ -47,8 +47,19 @@ CREATE TABLE IF NOT EXISTS `appointments` (
 -- Dumping data for table `appointments`
 --
 
-INSERT INTO `appointments` (`AppointmentID`, `UserID`, `DoctorID`, `AppointmentDate`, `Status`, `Mode`, `Report`, `CreatedAt`) VALUES
-(1, 1, 1, '2025-01-31 12:44:00', 'Scheduled', 'InPerson', NULL, '2025-02-01 00:04:30');
+INSERT INTO `appointments` (`UserID`, `DoctorID`, `AppointmentDate`, `Status`, `Mode`, `Report`, `CreatedAt`)
+SELECT 
+    FLOOR(RAND() * 50) + 1,
+    FLOOR(RAND() * 10) + 1,
+    DATE_ADD('2025-01-01', INTERVAL FLOOR(RAND() * 90) DAY),
+    CASE FLOOR(RAND() * 3) WHEN 0 THEN 'Completed' WHEN 1 THEN 'Scheduled' ELSE 'Cancelled' END,
+    CASE FLOOR(RAND() * 2) WHEN 0 THEN 'InPerson' ELSE 'Online' END,
+    CASE WHEN RAND() > 0.5 THEN 'Zalecono badania' ELSE NULL END,
+    NOW()
+FROM (SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL 
+      SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10) a,
+     (SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL 
+      SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10) b;
 
 -- --------------------------------------------------------
 
@@ -65,6 +76,18 @@ CREATE TABLE IF NOT EXISTS `doctoravailability` (
   PRIMARY KEY (`AvailabilityID`),
   KEY `DoctorID` (`DoctorID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dodawanie dostępności lekarzy
+--
+
+INSERT INTO doctoravailability (DoctorID, AvailableDate, StartTime, EndTime)
+SELECT 
+    d.DoctorID, 
+    DATE_ADD(CURDATE(), INTERVAL FLOOR(RAND() * 30) DAY),  -- Losowa data w ciągu następnych 30 dni
+    SEC_TO_TIME(FLOOR(RAND() * 4 + 8) * 3600),  -- Start między 8:00 a 12:00
+    SEC_TO_TIME(FLOOR(RAND() * 5 + 13) * 3600) -- Koniec między 13:00 a 18:00
+FROM doctors d, (SELECT 1 UNION SELECT 2 UNION SELECT 3) x;  -- Po 3 wpisy na lekarza
 
 -- --------------------------------------------------------
 
@@ -91,8 +114,11 @@ CREATE TABLE IF NOT EXISTS `doctors` (
 -- Dumping data for table `doctors`
 --
 
-INSERT INTO `doctors` (`DoctorID`, `FirstName`, `LastName`, `Email`, `PhoneNumber`, `SpecializationID`, `Bio`, `AvailabilityStatus`, `CreatedAt`) VALUES
-(1, 'Sigma', 'Skibidi', 'Lol@ez.xd', '1245', 1, 'Bio', 'Available', '2025-01-31 23:53:01');
+INSERT INTO `doctors` (`FirstName`, `LastName`, `Email`, `PhoneNumber`, `SpecializationID`, `Bio`, `AvailabilityStatus`, `CreatedAt`) VALUES
+('Jan', 'Kowalski', 'jan.kowalski@clinic.com', '123456789', 1, 'Doświadczony kardiolog', 'Available', NOW()),
+('Anna', 'Nowak', 'anna.nowak@clinic.com', '987654321', 2, 'Dermatolog z wieloletnim stażem', 'Available', NOW()),
+('Piotr', 'Wiśniewski', 'piotr.wisniewski@clinic.com', '456123789', 3, 'Ekspert w neurologii', 'Available', NOW()),
+('Marta', 'Lis', 'marta.lis@clinic.com', '741852963', 4, 'Specjalista ortopedii', 'Available', NOW());
 
 -- --------------------------------------------------------
 
@@ -109,6 +135,16 @@ CREATE TABLE IF NOT EXISTS `healthpackages` (
   `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`PackageID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dodawanie pakietów zdrowotnych
+--
+
+INSERT INTO healthpackages (Name, Description, Price, DurationMonths)
+VALUES 
+('Podstawowy', 'Podstawowy pakiet zdrowotny', 199.99, 3),
+('Rozszerzony', 'Więcej konsultacji i badań', 399.99, 6),
+('Premium', 'Najszerszy zakres usług', 799.99, 12);
 
 -- --------------------------------------------------------
 
@@ -129,6 +165,21 @@ CREATE TABLE IF NOT EXISTS `payments` (
   KEY `AppointmentID` (`AppointmentID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dodawanie płatności
+--
+
+INSERT INTO `payments` (`UserID`, `AppointmentID`, `Amount`, `PaymentMethod`, `Status`, `PaymentDate`)
+SELECT 
+    FLOOR(RAND() * 50) + 1,
+    FLOOR(RAND() * 100) + 1,
+    ROUND(RAND() * 300 + 100, 2),
+    CASE FLOOR(RAND() * 3) WHEN 0 THEN 'CreditCard' WHEN 1 THEN 'PayPal' ELSE 'DebitCard' END,
+    CASE FLOOR(RAND() * 2) WHEN 0 THEN 'Completed' ELSE 'Pending' END,
+    NOW()
+FROM (SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL 
+      SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10) a;
+
 -- --------------------------------------------------------
 
 --
@@ -148,6 +199,21 @@ CREATE TABLE IF NOT EXISTS `prescriptions` (
   KEY `UserID` (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dodawanie recept dla zakończonych wizyt
+--
+
+INSERT INTO prescriptions (AppointmentID, DoctorID, UserID, Details, CreatedAt)
+SELECT 
+    a.AppointmentID, 
+    a.DoctorID,
+    a.UserID,
+    CONCAT('Lek ', FLOOR(RAND() * 50) + 1, ' - 2x dziennie przez 7 dni'), 
+    NOW()
+FROM appointments a
+WHERE a.Status = 'Completed'
+LIMIT 70;
+
 -- --------------------------------------------------------
 
 --
@@ -165,6 +231,25 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   KEY `UserID` (`UserID`),
   KEY `DoctorID` (`DoctorID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dodawanie opinii dla zakończonych wizyt
+--
+
+INSERT INTO reviews (UserID, DoctorID, Rating, Comment, CreatedAt)
+SELECT 
+    a.UserID, 
+    a.DoctorID, 
+    FLOOR(RAND() * 3 + 3),  -- Oceny 3-5
+    CASE FLOOR(RAND() * 3) 
+        WHEN 0 THEN 'Bardzo dobry lekarz!' 
+        WHEN 1 THEN 'Wizyta przebiegła sprawnie' 
+        ELSE 'Mogło być lepiej, ale ok' 
+    END,
+    NOW()
+FROM appointments a
+WHERE a.Status = 'Completed'
+LIMIT 50;
 
 -- --------------------------------------------------------
 
@@ -184,8 +269,17 @@ CREATE TABLE IF NOT EXISTS `specializations` (
 -- Dumping data for table `specializations`
 --
 
-INSERT INTO `specializations` (`SpecializationID`, `Name`, `Description`) VALUES
-(1, 'Test', 'Cos tam');
+INSERT INTO `specializations` (`Name`, `Description`) VALUES
+('Kardiolog', 'Specjalista od chorób serca'),
+('Dermatolog', 'Specjalista od chorób skóry'),
+('Neurolog', 'Specjalista od układu nerwowego'),
+('Ortopeda', 'Specjalista od układu kostnego'),
+('Pediatra', 'Lekarz dziecięcy'),
+('Okulista', 'Specjalista od chorób oczu'),
+('Laryngolog', 'Specjalista od chorób uszu, nosa i gardła'),
+('Psychiatra', 'Specjalista od zdrowia psychicznego'),
+('Urolog', 'Specjalista od układu moczowego'),
+('Endokrynolog', 'Specjalista od hormonów');
 
 -- --------------------------------------------------------
 
@@ -203,6 +297,19 @@ CREATE TABLE IF NOT EXISTS `userhealthpackages` (
   KEY `UserID` (`UserID`),
   KEY `PackageID` (`PackageID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dodawanie pakietów użytkowników
+--
+
+INSERT INTO userhealthpackages (UserID, PackageID, StartDate, EndDate)
+SELECT 
+    u.UserID,
+    FLOOR(RAND() * 3) + 1,  -- losowy pakiet
+    DATE_SUB(NOW(), INTERVAL FLOOR(RAND() * 6) MONTH), -- Aktywne od 0-6 miesięcy temu
+    DATE_ADD(NOW(), INTERVAL FLOOR(RAND() * 6 + 6) MONTH) -- Ważne przez 6-12 miesięcy
+FROM users u
+LIMIT 30;
 
 -- --------------------------------------------------------
 
@@ -227,9 +334,20 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`UserID`, `FirstName`, `LastName`, `Email`, `PhoneNumber`, `DateOfBirth`, `Address`, `CreatedAt`) VALUES
-(1, 'Test', 'Test', 'aa@ww', '1548', '2025-02-07', 'abc', '2025-01-31 23:49:11'),
-(3, 'Test', 'Test', 'aa@wwk', '1548', '2025-02-07', 'abc', '2025-01-31 23:50:29');
+INSERT INTO `users` (`FirstName`, `LastName`, `Email`, `PhoneNumber`, `DateOfBirth`, `Address`, `CreatedAt`)
+SELECT 
+    CONCAT('User', id),
+    CONCAT('Surname', id),
+    CONCAT('user', id, '@example.com'),
+    LPAD(id, 9, '0'),
+    DATE_ADD('1970-01-01', INTERVAL FLOOR(RAND() * 18000) DAY),
+    CONCAT('Miasto ', id, ', ul. Przykładowa ', id),
+    NOW()
+FROM (SELECT (a.a + (10 * b.a)) AS id FROM 
+      (SELECT 1 a UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 
+       UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10) a,
+      (SELECT 0 a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4) b) numbers
+WHERE id <= 50;
 
 --
 -- Constraints for dumped tables
